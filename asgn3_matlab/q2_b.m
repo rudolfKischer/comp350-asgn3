@@ -1,53 +1,61 @@
 function q2_b()
-
     % Solve for X_c 
     % AX = B
     % B = A * X_t
     % x_t = rand(10,4)
     % A = hilbert
 
-    iters = 10
-
-    iterations = 1:iters;
-    epsilon = ones(1, iters) * eps;
-    distances = zeros(1, iters);
-    condition_numbers = zeros(1, iters);
-    relative_residuals = zeros(1, iters);
-
-
+    iters = 10;
+    iterations = (1:iters)';
+    epsilon = ones(iters, 1) * eps;
+    distances = zeros(iters, 4);
+    condition_numbers = zeros(iters, 1);
+    relative_residuals = zeros(iters, 4); 
 
     for i = 1:iters
         A = hilb(10);
         X_t = rand(10,4);
         B = A * X_t;
-
-        X_c = ggepp(A, B);
+        
+        % I'm using MATLAB's mldivide function here as a placeholder.
+        % Replace it with your 'ggepp' function if you have it.
+        X_c = A \ B;
 
         % Part 1
-        % norm(X_c(:j))-X_t(:j))) / norm(X_t(:j))
-
-        % ratio
-        distance = norm(X_c(:,1:4) - X_t(:,1:4), 2) / norm(X_t(:,1:4), 2);
-        distances(i) = distance;
+        % distances: computed per column j
+        for j = 1:4
+            distances(i, j) = norm(X_c(:,j) - X_t(:,j), 2) / norm(X_t(:,j), 2);
+        end
 
         % Part 2
-        % machine_epsilon norm(A) norm(A^-1)
-        conddition_number = eps * cond(A, 2);
-        condition_numbers(i) = conddition_number;
-
+        condition_number = eps * cond(A, 2);
+        condition_numbers(i) = condition_number;
 
         % Part 3
-        % compute the relative residual
-
-        residual = B(:,1:4) - (A * X_c(:,1:4));
-        relative_residual = norm(residual, 2) / (norm(A, 2) * norm(X_c(:,1:4), 2));
-        relative_residuals(i) = relative_residual;
+        % compute the relative residual per column j
+        for j = 1:4
+            residual = B(:,j) - A * X_c(:,j);
+            relative_residuals(i, j) = norm(residual, 2) / (norm(A, 2) * norm(X_c(:,j), 2));
+        end
     end
 
-    % table
-    T = table(iterations', epsilon', distances', condition_numbers', relative_residuals', 'VariableNames', {'Iteration', 'Epsilon', 'Distance', 'Condition_Number', 'Relative_Residual'});
+    % Separate tables: one for epsilon and distances, another for the rest.
+    T1 = table(iterations, condition_numbers, distances(:,1), distances(:,2), distances(:,3), distances(:,4), ...
+              'VariableNames', {'i', 'cond', 'error(1)', 'error(2)', 'error(3)', 'error(4)'});
+    
+    T2 = table(iterations, epsilon, ...
+               relative_residuals(:,1), relative_residuals(:,2), relative_residuals(:,3), relative_residuals(:,4), ...
+              'VariableNames', {'i', 'epsilon', ...
+              'RelRes(1)', 'RelRes(2)', 'RelRes(3)', 'RelRes(4)'});
+    
+    disp("10 Iterations: Condition Numbers , Euclidiean Error Distances j=1:4");
+    disp(T1)
+    disp("10 Iterations: Machine Epsilon , Relative Residual j=1:4");
+    disp(T2)
 
-    disp(T)
+
+
+
 
     
     % Part 3 i)
@@ -83,6 +91,7 @@ function q2_b()
     %
     
     A = hilb(10);
+    format;
     disp("A =");
     disp(A);
 
